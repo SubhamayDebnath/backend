@@ -22,6 +22,10 @@ const videoSchema = new mongoose.Schema({
         require: [true, "Description is required"],
         trim: true,
     },
+    category:{
+        type: Schema.Types.ObjectId,
+        ref: "Category"
+    },
     duration: {
         type: Number,
         require: [true, "Duration is required"],
