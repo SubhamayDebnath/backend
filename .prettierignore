@@ -1,0 +1,31 @@
+#
+# Ignored files for Prettier.
+#
+# The default prettierignore behavior is to use
+# the same format as .gitignore files.
+#
+
+# Dependencies and build outputs
+node_modules/
+dist/
+build/
+coverage/
+
+# Automatically generated files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Configuration files
+*.env
+*.json
+*.yml
+*.yaml
+*.xml
+
+# Sensitive files
+*.env*
+.env
+
+# Other
+.DS_Store
