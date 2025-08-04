@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const commentSchema = new mongoose.Schema({
-    comment:{
+    comment: {
         type: String,
         require: [true, "Comment is required"],
         trim: true
@@ -20,6 +20,6 @@ const commentSchema = new mongoose.Schema({
         ref: "User",
         required: [true, "User is required"]
     }
-},{timestamps:true});
-const Comment = mongoose.model("Comment",commentSchema);
+}, { timestamps: true });
+const Comment = mongoose.model("Comment", commentSchema);
 export default Comment;

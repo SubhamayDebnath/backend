@@ -26,11 +26,11 @@ const userSchema = new mongoose.Schema({
     },
     avatar: {
         type: String,
-        require: [true, "Avatar URL is required"],
+        default:''
     },
     coverImage: {
         type: String,
-        require: [true, "Cover Image URL is required"],
+        default: ''
     },
     watchHistory: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -56,17 +56,17 @@ const userSchema = new mongoose.Schema({
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
     const salt = await bcrypt.genSalt(10);
-    this.password = bcrypt.hash(this.password, salt);
+    this.password = await bcrypt.hash(this.password, salt);
     next();
 })
 
 // compare the password with hashed saved password
-userSchema.Schema.methods.isPasswordCorrect = async function (password) {
+userSchema.method.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password);
 }
 
 // generate access token
-userSchema.Schema.methods.generateAccessToken = async function () {
+userSchema.method.generateAccessToken = async function () {
     return jwt.sign(
         {
             userId: this._id,
@@ -83,7 +83,7 @@ userSchema.Schema.methods.generateAccessToken = async function () {
 }
 
 // generate refresh token
-userSchema.Schema.methods.generateRefreshAccessToken = async function () {
+userSchema.method.generateRefreshAccessToken = async function () {
     return jwt.sign(
         {
             userId: this._id,
@@ -94,5 +94,6 @@ userSchema.Schema.methods.generateRefreshAccessToken = async function () {
         }
     );
 }
+
 const User = mongoose.model("User", userSchema);
 export default User;

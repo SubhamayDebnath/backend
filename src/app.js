@@ -22,4 +22,11 @@ app.use(express.urlencoded({
 app.use(express.static("public"));
 app.use(cookieParser());
 
+
+// import Routes
+import authenticationRoutes from "./routes/authentication.routes.js";
+
+// routes declaration
+app.use("/api/v1/auth", authenticationRoutes);
+
 export default app;
