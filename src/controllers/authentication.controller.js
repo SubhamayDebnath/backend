@@ -71,7 +71,7 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new AppError(401, "Invalid Credential");
     }
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
-    const loggedInUser = await User.findById(user._id)
+    const loggedInUser = await User.findById(user._id);
     return res.status(200)
         .cookie("accessToken", accessToken, cookieOption)
         .cookie("refreshToken", refreshToken, cookieOption)
@@ -80,4 +80,21 @@ const loginUser = asyncHandler(async (req, res) => {
         );
 });
 
-export { registerUser, loginUser };
+// logout user
+const logoutUser = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(req.user?._id,
+        {
+            $set: { refreshToken: undefined }
+        },
+        {
+            new: true
+        }
+    );
+    res.clearCookie("accessToken", cookieOption);
+    res.clearCookie("refreshToken", cookieOption);
+    return res.status(200).json(
+        new ApiResponse(200, "User logged out successfully")
+    );
+});
+
+export { registerUser, loginUser, logoutUser };
