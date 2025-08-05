@@ -60,11 +60,6 @@ userSchema.pre("save", async function (next) {
     next();
 })
 
-// compare the password with hashed saved password
-userSchema.methods.isPasswordCorrect = async function (password) {
-    return await bcrypt.compare(password, this.password);
-}
-
 // compare the new password with hashed saved password
 userSchema.methods.comparePassword = async function (password) {
     return await bcrypt.compare(password, this.password);
@@ -88,7 +83,7 @@ userSchema.methods.generateAccessToken = async function () {
 }
 
 // generate refresh token
-userSchema.methods.generateRefreshAccessToken = async function () {
+userSchema.methods.generateRefreshToken = async function () {
     return jwt.sign(
         {
             userId: this._id,

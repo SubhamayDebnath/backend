@@ -2,7 +2,23 @@ import asyncHandler from "../utils/asyncHandler.js";
 import AppError from "../utils/appError.js";
 import ApiResponse from "../utils/apiResponse.js";
 import User from "../models/user.model.js";
-import { isValidEmail } from "../utils/helper.js";
+import { isValidEmail, cookieOption } from "../utils/helper.js";
+
+// generate access and refresh token
+const generateAccessAndRefreshToken = async (userID) => {
+    try {
+        const user = await User.findById(userID);
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+        user.refreshToken = refreshToken;
+        await user.save({
+            validateBeforeSave: false
+        });
+        return { accessToken, refreshToken };
+    } catch (error) {
+        throw new AppError(500, "Something went wrong while generating token");
+    }
+}
 
 // register new user
 const registerUser = asyncHandler(async (req, res) => {
@@ -37,6 +53,31 @@ const registerUser = asyncHandler(async (req, res) => {
     );
 });
 
-const loginUser = asyncHandler(async (req, res) => { });
+// login user
+const loginUser = asyncHandler(async (req, res) => {
+    const { username, email, password } = req.body;
+    if (!password || (!username && !email)) {
+        throw new AppError(400, "Password and either username or email are required");
+    }
+    const user = await User.findOne({
+        $or: [{ username }, { email }]
+    }).select("+password");
+    if (!user) {
+        throw new AppError(401, "Invalid Credential");
+    }
+    // function to compare both plain text password with saved hashed password
+    const isValidPassword = await user.comparePassword(password);
+    if (!isValidPassword) {
+        throw new AppError(401, "Invalid Credential");
+    }
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+    const loggedInUser = await User.findById(user._id)
+    return res.status(200)
+        .cookie("accessToken", accessToken, cookieOption)
+        .cookie("refreshToken", refreshToken, cookieOption)
+        .json(
+            new ApiResponse(200, "User logged in successfully", { id: loggedInUser._id, username: loggedInUser.username, email: loggedInUser.email, role: loggedInUser.role })
+        );
+});
 
 export { registerUser, loginUser };
