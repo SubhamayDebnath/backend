@@ -7,7 +7,7 @@ import { isValidEmail, cookieOption } from "../utils/helper.js";
 // generate access and refresh token
 const generateAccessAndRefreshToken = async (userID) => {
     try {
-        const user = await User.findById(userID);
+        const user = await User.findById(userID).select("+refreshToken");
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
         user.refreshToken = refreshToken;

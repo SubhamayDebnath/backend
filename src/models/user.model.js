@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
     },
     avatar: {
         type: String,
-        default:''
+        default: ''
     },
     coverImage: {
         type: String,
@@ -66,7 +66,7 @@ userSchema.methods.comparePassword = async function (password) {
 }
 
 // generate access token
-userSchema.methods.generateAccessToken = async function () {
+userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             userId: this._id,
@@ -83,7 +83,7 @@ userSchema.methods.generateAccessToken = async function () {
 }
 
 // generate refresh token
-userSchema.methods.generateRefreshToken = async function () {
+userSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
         {
             userId: this._id,
