@@ -1,4 +1,4 @@
-import {v2 as cloudinary} from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
 // configure cloudinary
@@ -10,10 +10,10 @@ cloudinary.config({
 
 const uploadOnCloudinary = async (filePath) => {
     try {
-        if(!filePath) return null;
+        if (!filePath) return null;
         // upload the file on cloudinary
-        return await cloudinary.uploader.upload(filePath,{
-            resource_type:"auto"
+        return await cloudinary.uploader.upload(filePath, {
+            resource_type: "auto"
         });
     } catch (error) {
         fs.unlinkSync(filePath); // delete the file from server if upload fails

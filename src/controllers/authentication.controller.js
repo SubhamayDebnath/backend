@@ -29,12 +29,14 @@ const registerUser = asyncHandler(async (req, res) => {
     });
     // to check user is created or not
     const createdUser = await User.findById(user._id);
-    if(!createdUser){
-        throw new AppError(500,"Something went wrong while registering user");
+    if (!createdUser) {
+        throw new AppError(500, "Something went wrong while registering user");
     }
     return res.status(201).json(
-        new ApiResponse(201,"User registered successfully",createdUser)
+        new ApiResponse(201, "User registered successfully", createdUser)
     );
 });
 
-export { registerUser };
+const loginUser = asyncHandler(async (req, res) => { });
+
+export { registerUser, loginUser };
