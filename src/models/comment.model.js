@@ -6,10 +6,6 @@ const commentSchema = new mongoose.Schema({
         require: [true, "Comment is required"],
         trim: true
     },
-    likeCount: {
-        type: Number,
-        default: 0
-    },
     video: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Video",
