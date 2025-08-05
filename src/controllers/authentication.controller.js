@@ -3,6 +3,7 @@ import AppError from "../utils/appError.js";
 import ApiResponse from "../utils/apiResponse.js";
 import User from "../models/user.model.js";
 import { isValidEmail, cookieOption } from "../utils/helper.js";
+import jwt from "jsonwebtoken";
 
 // generate access and refresh token
 const generateAccessAndRefreshToken = async (userID) => {
@@ -98,4 +99,32 @@ const logoutUser = asyncHandler(async (req, res) => {
         );
 });
 
-export { registerUser, loginUser, logoutUser };
+// refresh access token
+const refreshAccessToken = asyncHandler(async (req, res) => {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+    if (!incomingRefreshToken) {
+        throw new AppError(401, "Unauthorized access");
+    }
+    try {
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const user = await User.findById(decodedToken?._id);
+        if (!user) {
+            throw new AppError(401, "Unauthorized access");
+        }
+        if (incomingRefreshToken !== user?.refreshToken) {
+            throw new AppError(401, "Token is expired or used");
+        }
+        const { accessToken, newRefreshToken } = await generateAccessAndRefreshToken(user._id);
+        return res.status(200)
+            .clearCookie("accessToken", accessToken, cookieOption)
+            .clearCookie("refreshToken", newRefreshToken, cookieOption)
+            .json(
+                new ApiResponse(200, "Access token refreshed successfully", { accessToken, newRefreshToken })
+            );
+    } catch (error) {
+        throw new AppError(401, error.message || "Unauthorized access");
+
+    }
+})
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken };
