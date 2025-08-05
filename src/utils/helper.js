@@ -5,10 +5,12 @@ const isValidEmail = (email) => {
 }
 
 // cookie option
+const isProduction = process.env.NODE_ENV === 'production';
 const cookieOption = {
     httpOnly: true,
-    secure: true,
-    sameSite: 'Lax'
+    secure: isProduction, 
+    sameSite: 'Lax',
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
 }
 
 export { isValidEmail, cookieOption };
