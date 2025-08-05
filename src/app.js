@@ -25,8 +25,9 @@ app.use(cookieParser());
 
 // import Routes
 import authenticationRoutes from "./routes/authentication.routes.js";
+import categoryRoutes from "./routes/category.routes.js";
 
 // routes declaration
 app.use("/api/v1/auth", authenticationRoutes);
-
+app.use("/api/v1/category", categoryRoutes);
 export default app;
