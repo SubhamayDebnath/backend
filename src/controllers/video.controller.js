@@ -11,7 +11,6 @@ const uploadVideo = asyncHandler(async (req, res) => {
     const videoFileLocalPath = req.files?.file[0]?.path;
     const thumbnailLocalPath = req.files?.thumbnail[0]?.path;
 
-
     if (!videoFileLocalPath) {
         throw new AppError(400, "Video file is required");
     }
@@ -19,7 +18,6 @@ const uploadVideo = asyncHandler(async (req, res) => {
         throw new AppError(400, "Thumbnail is required");
     }
     // upload on cloudinary
-    console.log(videoFileLocalPath);
     const videoFile = await uploadOnCloudinary(videoFileLocalPath);
     const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
     if (!videoFile || !thumbnail) {
@@ -30,8 +28,14 @@ const uploadVideo = asyncHandler(async (req, res) => {
     }
     // save into the database
     const uploaded = await Video.create({
-        videoFile:videoFile?.url || "",
-        thumbnail:thumbnail?.url || "",
+        videoFile:{
+            url: videoFile?.url || "",
+            public_id: videoFile?.public_id || "",
+        },
+        thumbnail:{
+            url: thumbnail?.url || "",
+            public_id: thumbnail?.public_id || "",
+        },
         title,
         description,
         category,
@@ -42,6 +46,17 @@ const uploadVideo = asyncHandler(async (req, res) => {
         throw new AppError(500, "Failed to upload video", null);
     }
     return res.status(200).json(new ApiResponse(200, "Video uploaded successfully"));
+});
+
+const deleteVideo = asyncHandler(async (req,res) => {
+    const videoId = req.params.id;
+    if(!videoId){
+        throw new AppError(404,"Video not found");
+    }
+    const deletedVideo = await Video.findByIdAndDelete(videoId);
+    if(!deletedVideo){
+        throw new AppError(404,"Video not found");
+    }
 });
 
 export { uploadVideo };
