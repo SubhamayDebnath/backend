@@ -118,11 +118,11 @@ const updateVideo = asyncHandler(async (req, res) => {
     }
 
     if (Object.keys(updateObject).length !== 0) {
-        // await Video.findByIdAndUpdate(
-        //     videoID,
-        //     { $set: updateObject },
-        //     { new: true, runValidators: true }
-        // );
+        await Video.findByIdAndUpdate(
+            videoID,
+            { $set: updateObject },
+            { new: true, runValidators: true }
+        );
         return res.status(200).json(new ApiResponse(200, "Video updated successfully"));
     }
     return res.status(200).json(new ApiResponse(200, "Video not updated"));
