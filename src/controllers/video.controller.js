@@ -31,12 +31,12 @@ const uploadVideo = asyncHandler(async (req, res) => {
     // save into the database
     const uploaded = await Video.create({
         videoFile: {
-            url: videoFile?.url || "",
-            public_id: videoFile?.public_id || "",
+            url: videoFile?.url,
+            public_id: videoFile?.public_id,
         },
         thumbnail: {
-            url: thumbnail?.url || "",
-            public_id: thumbnail?.public_id || "",
+            url: thumbnail?.url,
+            public_id: thumbnail?.public_id,
         },
         title,
         description,
@@ -48,6 +48,84 @@ const uploadVideo = asyncHandler(async (req, res) => {
         throw new AppError(500, "Failed to upload video", null);
     }
     return res.status(200).json(new ApiResponse(200, "Video uploaded successfully"));
+});
+
+// update video
+const updateVideo = asyncHandler(async (req, res) => {
+    const updateObject = {};
+    const videoID = req.params.id;
+    if (!videoID) {
+        throw new AppError(404, "Video not found");
+    }
+    const video = await Video.findById(videoID);
+    if (!video) {
+        throw new AppError(404, "Video not found");
+    }
+    const videoPublicId = video.videoFile?.public_id;
+    const thumbnailPublicId = video.thumbnail?.public_id;
+
+    const { title, description, category } = req.body;
+    if ([title, description, category].some((field) => field?.trim() === "")) {
+        throw new AppError(400, "Title, description and category is required");
+    }
+    if (title) updateObject.title = title;
+    if (description) updateObject.description = description;
+    if (category) updateObject.category = category;
+
+    // if files are present then upload on cloudinary
+    if (Object.keys(req.files).length > 0) {
+        // it will check file mime type. based on that it will execute different code block
+        if(req.files.file[0].mimetype.split("/")[0] === 'video'){
+            const videoFileLocalPath = req.files?.file[0]?.path;
+            const [uploadResults, deletionResults] = await Promise.all([
+                uploadOnCloudinary(videoFileLocalPath, "video"),
+                deleteFromCloudinary(videoPublicId, "video"),
+            ])
+            const videoFile = uploadResults;
+            if (!videoFile) {
+                throw new AppError(500, "Something went wrong while uploading video", null);
+            }
+            updateObject.videoFile = { url: videoFile?.url, public_id: videoFile?.public_id };
+            updateObject.duration = videoFile?.duration;
+        } else if (req.files.thumbnail[0].mimetype.split("/")[0] === 'image'){
+            const thumbnailLocalPath = req.files?.thumbnail[0]?.path || null;
+            const [uploadResults, deletionResults] = await Promise.all([
+                uploadOnCloudinary(thumbnailLocalPath, "image"),
+                deleteFromCloudinary(thumbnailPublicId, "image"),
+            ])
+            const thumbnail = uploadResults;
+            if (!thumbnail) {
+                throw new AppError(500, "Something went wrong while uploading thumbnail", null);
+            }
+            updateObject.thumbnail = { url: thumbnail?.url, public_id: thumbnail?.public_id };
+        } else if( req.files.file[0].mimetype.split("/")[0] === 'video' && req.files.thumbnail[0].mimetype.split("/")[0] === 'image'){
+            const videoFileLocalPath = req.files?.file[0]?.path;
+            const thumbnailLocalPath = req.files?.thumbnail[0]?.path;
+            const [uploadResults, deletionResults] = await Promise.all([
+                Promise.all([
+                    uploadOnCloudinary(videoFileLocalPath, "video"),
+                    uploadOnCloudinary(thumbnailLocalPath, "image"),
+                ]),
+                Promise.all([
+                    deleteFromCloudinary(videoPublicId, "video"),
+                    deleteFromCloudinary(thumbnailPublicId, "image"),
+                ])
+            ])
+            updateObject.videoFile = { url: newVideoFile.url, public_id: newVideoFile.public_id };
+            updateObject.thumbnail = { url: newThumbnail.url, public_id: newThumbnail.public_id };
+            updateObject.duration = newVideoFile.duration;
+        }
+    }
+
+    if (Object.keys(updateObject).length !== 0) {
+        // await Video.findByIdAndUpdate(
+        //     videoID,
+        //     { $set: updateObject },
+        //     { new: true, runValidators: true }
+        // );
+        return res.status(200).json(new ApiResponse(200, "Video updated successfully"));
+    }
+    return res.status(200).json(new ApiResponse(200, "Video not updated"));
 });
 
 // delete video
@@ -74,4 +152,4 @@ const deleteVideo = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, "Video deleted successfully"));
 });
 
-export { uploadVideo, deleteVideo };
+export { uploadVideo, updateVideo, deleteVideo };
