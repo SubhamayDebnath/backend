@@ -4,6 +4,29 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/apiResponse.js";
 
+// get all videos
+const getAllVideos = asyncHandler(async (req, res) => {
+    const videos = await Video.find().sort({ createdAt: -1 }).populate("owner");
+    if (!videos || videos.length === 0) {
+        return res.status(200).json(new AppError(404, "Videos not found",[]));
+    } else {
+        return res.status(200).json(new ApiResponse(200, "Videos fetched successfully", videos));
+    }
+});
+
+// get video by id
+const getVideoById = asyncHandler(async (req, res) => {
+    const videoId = req.params.id;
+    if (!videoId) {
+        throw new AppError(404, "Video not found");
+    }
+    const video = await Video.findById(videoId).populate("owner");
+    if (!video) {
+        throw new AppError(404, "Video not found");
+    }
+    return res.status(200).json(new ApiResponse(200, "Video fetched successfully", video));
+});
+
 // add video
 const uploadVideo = asyncHandler(async (req, res) => {
     const { title, description, category } = req.body;
@@ -152,4 +175,4 @@ const deleteVideo = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, "Video deleted successfully"));
 });
 
-export { uploadVideo, updateVideo, deleteVideo };
+export { getAllVideos, getVideoById,uploadVideo, updateVideo, deleteVideo };

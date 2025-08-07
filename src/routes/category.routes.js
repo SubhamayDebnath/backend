@@ -4,8 +4,9 @@ import { verifyJwtToken, isAdmin } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.get('/get', getCategory)
-    .post('/create', verifyJwtToken, isAdmin, addCategory)
-    .put("/update/:id", verifyJwtToken, isAdmin, updateCategory)
-    .delete('/delete/:id', verifyJwtToken, isAdmin, deleteCategory)
+router.get('/get', getCategory);
+router.post('/create', verifyJwtToken, isAdmin, addCategory);
+router.put("/update/:id", verifyJwtToken, isAdmin, updateCategory);
+router.delete('/delete/:id', verifyJwtToken, isAdmin, deleteCategory);
+
 export default router;
