@@ -1,7 +1,7 @@
 import Video from "../models/video.model.js";
 import AppError from "../utils/appError.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import uploadOnCloudinary from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/apiResponse.js";
 
 // add video
@@ -18,8 +18,10 @@ const uploadVideo = asyncHandler(async (req, res) => {
         throw new AppError(400, "Thumbnail is required");
     }
     // upload on cloudinary
-    const videoFile = await uploadOnCloudinary(videoFileLocalPath);
-    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+    const [videoFile, thumbnail] = await Promise.all([
+        uploadOnCloudinary(videoFileLocalPath, "video"),
+        uploadOnCloudinary(thumbnailLocalPath, "image"),
+    ])
     if (!videoFile || !thumbnail) {
         throw new AppError(500, "Something went wrong while uploading video", null);
     }
@@ -28,18 +30,18 @@ const uploadVideo = asyncHandler(async (req, res) => {
     }
     // save into the database
     const uploaded = await Video.create({
-        videoFile:{
+        videoFile: {
             url: videoFile?.url || "",
             public_id: videoFile?.public_id || "",
         },
-        thumbnail:{
+        thumbnail: {
             url: thumbnail?.url || "",
             public_id: thumbnail?.public_id || "",
         },
         title,
         description,
         category,
-        duration:videoFile?.duration,
+        duration: videoFile?.duration,
         owner: req.user._id,
     });
     if (!uploaded) {
@@ -48,15 +50,28 @@ const uploadVideo = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, "Video uploaded successfully"));
 });
 
-const deleteVideo = asyncHandler(async (req,res) => {
+// delete video
+const deleteVideo = asyncHandler(async (req, res) => {
     const videoId = req.params.id;
-    if(!videoId){
-        throw new AppError(404,"Video not found");
+    if (!videoId) {
+        throw new AppError(404, "Video not found");
     }
-    const deletedVideo = await Video.findByIdAndDelete(videoId);
-    if(!deletedVideo){
-        throw new AppError(404,"Video not found");
+    const deletedVideo = await Video.findById(videoId);
+    if (!deletedVideo) {
+        throw new AppError(404, "Video not found");
     }
+    const thumbnailPublicId = deletedVideo.thumbnail?.public_id;
+    const videoPublicId = deletedVideo.videoFile?.public_id;
+    // delete from cloudinary
+    const [videoDeletion, thumbnailDeletion] = await Promise.all([
+        deleteFromCloudinary(videoPublicId, "video"),
+        deleteFromCloudinary(thumbnailPublicId, "image")
+    ]);
+    if (!videoDeletion || !thumbnailDeletion) {
+        throw new AppError(500, "Something went wrong while deleting video", null);
+    }
+    await Video.findByIdAndDelete(videoId);
+    return res.status(200).json(new ApiResponse(200, "Video deleted successfully"));
 });
 
-export { uploadVideo };
+export { uploadVideo, deleteVideo };
