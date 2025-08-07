@@ -6,6 +6,7 @@ const categorySchema = new mongoose.Schema({
         require: [true, "Category name is required"],
         trim: true,
         unique: true,
+        lowercase:true,
         index: true
     },
     owner: {

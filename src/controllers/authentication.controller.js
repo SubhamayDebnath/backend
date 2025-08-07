@@ -44,13 +44,11 @@ const registerUser = asyncHandler(async (req, res) => {
         email,
         password
     });
-    // to check user is created or not
-    const createdUser = await User.findById(user._id);
-    if (!createdUser) {
+    if (!user) {
         throw new AppError(500, "Something went wrong while registering user");
     }
     return res.status(201).json(
-        new ApiResponse(201, "User registered successfully", createdUser)
+        new ApiResponse(201, "User registered successfully",user)
     );
 });
 
@@ -72,12 +70,11 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new AppError(401, "Invalid Credential");
     }
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
-    const loggedInUser = await User.findById(user._id);
     return res.status(200)
         .cookie("accessToken", accessToken, cookieOption)
         .cookie("refreshToken", refreshToken, cookieOption)
         .json(
-            new ApiResponse(200, "User logged in successfully", { id: loggedInUser._id, username: loggedInUser.username, email: loggedInUser.email, role: loggedInUser.role })
+            new ApiResponse(200, "User logged in successfully", { id: user._id, username: user.username, email: user.email, role: user.role })
         );
 });
 

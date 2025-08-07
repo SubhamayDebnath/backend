@@ -19,10 +19,6 @@ const ChannelSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Video",
     }],
-    subscriptionCount: {
-        type: Number,
-        default: 0
-    },
     isPublic: {
         type: Boolean,
         default: true
