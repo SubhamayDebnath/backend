@@ -8,7 +8,7 @@ import User from "../models/user.model.js";
 
 // get all videos
 const getAllVideos = asyncHandler(async (req, res) => {
-    const videos = await Video.find().sort({ createdAt: -1 }).populate("owner");
+    const videos = await Video.find({isPublished: true}).sort({ createdAt: -1 }).populate("owner");
     if (!videos || videos.length === 0) {
         return res.status(200).json(new AppError(404, "Videos not found",[]));
     } else {
@@ -22,9 +22,9 @@ const getVideoById = asyncHandler(async (req, res) => {
     if (!videoId) {
         throw new AppError(404, "Video not found");
     }
-    const video = await Video.findById(videoId).populate("owner");
+    const video = await Video.findOne({ _id: videoId ,isPublished: true}).populate("owner");
     if (!video) {
-        throw new AppError(404, "Video not found");
+        throw new AppError(404, "Video not found or is private");
     }
     return res.status(200).json(new ApiResponse(200, "Video fetched successfully", video));
 });
@@ -40,7 +40,7 @@ const getVideoByCategory = asyncHandler(async (req,res) => {
     if(!category){
         throw new AppError(404, "Invalid category");
     }
-    const videos = await Video.find({ category: category._id }).populate("owner");
+    const videos = await Video.find({ category: category._id,isPublished: true }).populate("owner");
     if (!videos || videos.length === 0) {
         return res.status(200).json(new AppError(404, "Videos not found",[]));
     } else {
@@ -56,7 +56,7 @@ const getVideosByUser = asyncHandler(async (req,res) => {
     }
     const userName = userNameSlug.trim();
     const user = await User.findOne({username:userName});
-    const videos = await Video.find({ owner: user._id }).populate("owner");
+    const videos = await Video.find({ owner: user._id,isPublished:true }).populate("owner");
     if (!videos || videos.length === 0) {
         return res.status(200).json(new AppError(404, "Videos not found",[]));
     } else {
