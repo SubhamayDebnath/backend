@@ -1,8 +1,10 @@
 import Video from "../models/video.model.js";
+import Category from "../models/category.model.js";
 import AppError from "../utils/appError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/apiResponse.js";
+import User from "../models/user.model.js";
 
 // get all videos
 const getAllVideos = asyncHandler(async (req, res) => {
@@ -25,6 +27,41 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new AppError(404, "Video not found");
     }
     return res.status(200).json(new ApiResponse(200, "Video fetched successfully", video));
+});
+
+// get video by category
+const getVideoByCategory = asyncHandler(async (req,res) => {
+    const categorySlug = req.params.slug;
+    const categoryName = categorySlug.trim();
+    if (!categoryName) {
+        throw new AppError(404, "Category not found");
+    }
+    const category = await Category.findOne({categoryName:categoryName});
+    if(!category){
+        throw new AppError(404, "Invalid category");
+    }
+    const videos = await Video.find({ category: category._id }).populate("owner");
+    if (!videos || videos.length === 0) {
+        return res.status(200).json(new AppError(404, "Videos not found",[]));
+    } else {
+        return res.status(200).json(new ApiResponse(200, "Videos fetched successfully", videos));
+    }
+});
+
+// get videos by user 
+const getVideosByUser = asyncHandler(async (req,res) => {
+    const userNameSlug = req.params.slug;
+    if(!userNameSlug){
+        throw new AppError(404, "User not found");
+    }
+    const userName = userNameSlug.trim();
+    const user = await User.findOne({username:userName});
+    const videos = await Video.find({ owner: user._id }).populate("owner");
+    if (!videos || videos.length === 0) {
+        return res.status(200).json(new AppError(404, "Videos not found",[]));
+    } else {
+        return res.status(200).json(new ApiResponse(200, "Videos fetched successfully", videos));
+    }
 });
 
 // add video
@@ -175,4 +212,4 @@ const deleteVideo = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, "Video deleted successfully"));
 });
 
-export { getAllVideos, getVideoById,uploadVideo, updateVideo, deleteVideo };
+export { getAllVideos, getVideoById,getVideosByUser,getVideoByCategory,uploadVideo, updateVideo, deleteVideo };
